@@ -296,13 +296,16 @@ const 表單 = document.getElementById('birth-form');
   if (!年 || 年 < 1901 || 年 > 2099 || !Number.isInteger(時)) return;
   const 稱呼 = document.getElementById('name').value.trim() || '你';
   const 命盤 = 四柱(年,月,日,時,分);
-  const 星名 = 星座[月 - (日 < 星座界日[月 - 1] ? 1 : 0)];
+  // 太陽星座以實際出生時刻計算，避免生日交界時只依日期判斷。
+  const 出生時刻 = new Date(Date.UTC(年, 月 - 1, 日, 時 - 8, 分));
+  const 太陽位置 = window.Astronomy.Ecliptic(window.Astronomy.GeoVector('Sun', 出生時刻, true)).elon;
+  const 星名 = 星名表[Math.floor(太陽位置 / 30)];
   const 距節氣 = Math.min(取餘(命盤.黃經 - 315, 30), 30 - 取餘(命盤.黃經 - 315, 30));
   const 結果 = document.getElementById('result');
   // 稱呼先轉成純文字，避免把輸入內容當成網頁程式執行。
   const 安全稱呼 = document.createElement('span'); 安全稱呼.textContent = 稱呼;
-  結果.innerHTML = `<div class="result-header"><span class="small">你的專屬命盤</span><h3>${安全稱呼.innerHTML}的命盤小誌</h3><p>${年} 年 ${月} 月 ${日} 日 · ${String(時).padStart(2,'0')}:${String(分).padStart(2,'0')} · 台灣標準時間</p></div><div class="pillars">${命盤.柱.map((柱,序)=>`<div class="pillar"><span>${['年柱','月柱','日柱','時柱'][序]}</span><strong>${柱}</strong></div>`).join('')}</div><div class="readings"><div class="reading"><h4>✳ 日主 · ${命盤.日干}${命盤.元素}</h4><p>日主取自日柱天干，在傳統八字中代表觀察命盤的核心。${解讀[命盤.元素]}</p></div><div class="reading"><h4>✧ 太陽星座 · ${星名}</h4><p>太陽星座以生日的常見日期區間估算，代表西洋占星中自我意識的象徵；交界日期可能因出生年份與時間有所不同。</p></div></div><p class="result-note">計算方式：立春換年、節氣換月、每日零時換日，未校正真太陽時。${距節氣 < 1 ? '你的出生時間接近節氣交界，年柱或月柱可能因計算誤差而不同，請另行核對。' : ''}${時 === 23 ? '你出生於子時；部分流派採晚子時換日，日柱與時柱可能不同。' : ''}</p>`;
-  結果.scrollIntoView({behavior:'smooth',block:'nearest'});
+  結果.innerHTML = `<div class="result-header"><span class="small">你的專屬命盤</span><h3>${安全稱呼.innerHTML}的命盤小誌</h3><p>${年} 年 ${月} 月 ${日} 日 · ${String(時).padStart(2,'0')}:${String(分).padStart(2,'0')} · 台灣標準時間</p></div><div class="pillars">${命盤.柱.map((柱,序)=>`<div class="pillar"><span>${['年柱','月柱','日柱','時柱'][序]}</span><strong>${柱}</strong></div>`).join('')}</div><div class="readings"><div class="reading"><h4>✳ 日主 · ${命盤.日干}${命盤.元素}</h4><p>日主取自日柱天干，在傳統八字中代表觀察命盤的核心。${解讀[命盤.元素]}</p></div><div class="reading"><h4>✧ 太陽星座 · ${星名}</h4><p>太陽星座依出生當時的太陽位置計算，在西洋占星中象徵自我意識與表達方式。</p></div></div><p class="result-note">計算方式：立春換年、節氣換月、每日零時換日，未校正真太陽時。${距節氣 < 1 ? '你的出生時間接近節氣交界，年柱或月柱可能因計算誤差而不同，請另行核對。' : ''}${時 === 23 ? '你出生於子時；部分流派採晚子時換日，日柱與時柱可能不同。' : ''}</p>`;
+  // 西洋星盤完成後會自動捲動到星盤。
 });
 
 // 使用內建的天文計算工具。
@@ -351,5 +354,6 @@ function 畫圓盤(行星, 上升) {
     行星.forEach(星=>{const 按鈕=document.createElement('button');按鈕.type='button';按鈕.className='planet-row';按鈕.innerHTML=`<strong>${星.符號} ${星.名稱}</strong><span>${度數文字(星.度)}</span><span>第 ${星.宮} 宮</span>`;按鈕.onclick=()=>{document.getElementById('sky-explain').innerHTML=`<h3>${星.符號} ${星.名稱} · ${度數文字(星.度)} · 第 ${星.宮} 宮</h3><p>在占星的象徵系統中，${星.名稱}與「${星.意義}」有關。星座描述表現風格，宮位代表可能關注的生活領域。這是一個探索自己的提問方向，而非對性格或未來的定論。</p>`;};清單.appendChild(按鈕);});
     document.getElementById('sky-explain').innerHTML=`<h3>上升星座 · ${度數文字(上升)}</h3><p>上升星座是出生時東方地平線升起的黃道位置；占星傳統中常用來探索一個人與外界互動的方式。選擇上方任一行星，可查看它的象徵。</p>`;
     訊息.hidden=true;內容.hidden=false;
+    區域.scrollIntoView({behavior:'smooth',block:'start'});
   } catch (錯誤) { 訊息.textContent='目前無法完成星盤計算，請重新整理頁面再試。八字區仍可使用。'; }
 });
