@@ -351,9 +351,43 @@ function 畫圓盤(行星, 上升) {
     const 行星=行星資料.map(([代碼,名稱,符號,意義])=>{const 向量=天文.GeoVector(代碼,時間,true);const 度=天文.Ecliptic(向量).elon;return {名稱,符號,意義,度,宮:Math.floor(取餘(度-上升,360)/30)+1};});
     畫圓盤(行星,上升);
     const 清單=document.getElementById('planet-list');清單.innerHTML='<div class="sky-heading-row"><span>行星</span><span>星座與度數</span><span>宮位</span></div>';
-    行星.forEach(星=>{const 按鈕=document.createElement('button');按鈕.type='button';按鈕.className='planet-row';按鈕.innerHTML=`<strong>${星.符號} ${星.名稱}</strong><span>${度數文字(星.度)}</span><span>第 ${星.宮} 宮</span>`;按鈕.onclick=()=>{document.getElementById('sky-explain').innerHTML=`<h3>${星.符號} ${星.名稱} · ${度數文字(星.度)} · 第 ${星.宮} 宮</h3><p>在占星的象徵系統中，${星.名稱}與「${星.意義}」有關。星座描述表現風格，宮位代表可能關注的生活領域。這是一個探索自己的提問方向，而非對性格或未來的定論。</p>`;};清單.appendChild(按鈕);});
+    行星.forEach(星=>{const 按鈕=document.createElement('button');按鈕.type='button';按鈕.className='planet-row';按鈕.innerHTML=`<strong>${星.符號} ${星.名稱}</strong><span>${度數文字(星.度)}</span><span>第 ${星.宮} 宮</span>`;按鈕.onclick=()=>{document.getElementById('sky-explain').innerHTML=行星解析(星);document.getElementById('sky-explain').scrollIntoView({behavior:'smooth',block:'center'});};清單.appendChild(按鈕);});
     document.getElementById('sky-explain').innerHTML=`<h3>上升星座 · ${度數文字(上升)}</h3><p>上升星座是出生時東方地平線升起的黃道位置；占星傳統中常用來探索一個人與外界互動的方式。選擇上方任一行星，可查看它的象徵。</p>`;
+    顯示個人解析(行星,上升);
     訊息.hidden=true;內容.hidden=false;
     區域.scrollIntoView({behavior:'smooth',block:'start'});
   } catch (錯誤) { 訊息.textContent='目前無法完成星盤計算，請重新整理頁面再試。八字區仍可使用。'; }
 });
+
+// 星座描述表現方式，宮位描述可能關注的生活領域。
+const 星座解析 = [
+  '主動、直接，喜歡先嘗試再調整', '重視穩定、感官體驗與可靠的步調',
+  '好奇、靈活，傾向透過交流整理想法', '敏感細膩，重視情感連結與安全感',
+  '熱情而有創意，希望真誠表達自我', '重視細節與實用性，傾向觀察並改善',
+  '在意公平與關係和諧，擅長從不同角度思考', '重視深度、信任與真實的情感連結',
+  '喜歡探索新觀點，重視自由與成長', '重視責任、規劃與長期累積',
+  '重視獨立思考，喜歡嘗試不同的可能', '富有同理與想像，容易感受環境氣氛'
+];
+const 宮位解析 = ['自我形象與個人表達','金錢、資源與自我價值','學習、溝通與日常交流','家庭、居住與內在安全感','創作、興趣與浪漫','日常工作、習慣與健康管理','伴侶、合作與一對一關係','親密、共同資源與轉變','高等學習、旅行與世界觀','事業、志向與社會角色','朋友、社群與共同理想','潛意識、休息與內在世界'];
+const 行星重點 = {
+  太陽:['核心自我','什麼樣的時刻，會讓你覺得自己最自在？'],
+  月亮:['情緒與安全感','你通常需要什麼，才能真正放鬆？'],
+  水星:['思考與溝通','你偏好用什麼方式表達想法？'],
+  金星:['感情與喜好','在人際關係裡，什麼讓你感到被珍惜？'],
+  火星:['行動與動力','遇到想完成的事時，你習慣怎麼行動？'],
+  木星:['成長與探索','哪些經驗讓你更願意擴展眼界？'],
+  土星:['責任與學習','哪些界線或長期練習能支持你？'],
+  天王星:['改變與獨立','你希望在哪些地方保有自主？'],
+  海王星:['想像與理想','你的理想可以如何結合現實？'],
+  冥王星:['轉變與深度','面對重要轉變時，你希望保留什麼？']
+};
+function 行星解析(星) {
+  const 序 = Math.floor(取餘(星.度,360) / 30);
+  const [主題,提問] = 行星重點[星.名稱];
+  return `<h3>${星.符號} ${星.名稱} · ${度數文字(星.度)} · 第 ${星.宮} 宮</h3><p><b>${主題}：</b>在占星傳統中，${星.名稱}象徵${星.意義}。${星名表[序]}的詮釋傾向${星座解析[序]}；第 ${星.宮} 宮關聯${宮位解析[星.宮-1]}。這些特質可視為觀察自己的線索，實際感受仍以你的經驗為準。</p><p class="reading-question">留給你的問題：${提問}</p>`;
+}
+function 顯示個人解析(行星, 上升) {
+  const 上升序 = Math.floor(取餘(上升,360) / 30);
+  const 區塊 = document.getElementById('personal-reading');
+  區塊.innerHTML = `<div class="analysis-intro"><span class="number">03 / 個人解析</span><h3>把星盤翻譯成容易理解的話</h3><p>以下依照你的出生資料與行星位置組合，提供自我探索的方向。可以從太陽、月亮和上升開始看。</p></div><div class="analysis-cards"><article class="analysis-card"><h4>✦ 上升 ${星名表[上升序]}</h4><p>上升象徵初次接觸世界與給人的第一印象。${星名表[上升序]}的傳統描述是${星座解析[上升序]}；你可以想想，這和別人剛認識你時的感受是否相近。</p></article>${行星.map(星=>`<article class="analysis-card">${行星解析(星)}</article>`).join('')}</div><p class="sky-disclaimer">這些文字依行星、星座與等宮制宮位的傳統象徵組合，並非科學性格測驗，也無法預測命運。出生時間或地點有誤會影響上升與宮位。</p>`;
+}
