@@ -288,6 +288,28 @@ function 四柱(年, 月, 日, 時, 分) {
   const 時干 = 取餘((日序 % 10 % 5) * 2 + 時支, 10);
   return {柱:[天干[年序 % 10]+地支[年序 % 12],天干[月干]+地支[月支],天干[日序 % 10]+地支[日序 % 12],天干[時干]+地支[時支]],日干:天干[日序 % 10],元素:五行[日序 % 10],黃經};
 }
+// 透過年、月、日選單快速輸入生日，並依月份調整日期。
+const 出生年選單 = document.getElementById('birth-year');
+const 出生月選單 = document.getElementById('birth-month');
+const 出生日選單 = document.getElementById('birth-day');
+for (let 年 = new Date().getFullYear(); 年 >= 1901; 年--) 出生年選單.add(new Option(年 + ' 年', 年));
+for (let 月 = 1; 月 <= 12; 月++) 出生月選單.add(new Option(月 + ' 月', 月));
+function 更新出生日期() {
+  const 年 = Number(出生年選單.value);
+  const 月 = Number(出生月選單.value);
+  const 原日期 = Number(出生日選單.value);
+  const 天數 = 年 && 月 ? new Date(年, 月, 0).getDate() : 31;
+  出生日選單.innerHTML = '<option value="">日期</option>';
+  for (let 日 = 1; 日 <= 天數; 日++) 出生日選單.add(new Option(日 + ' 日', 日));
+  if (原日期 <= 天數 && 原日期 > 0) 出生日選單.value = String(原日期);
+  else 出生日選單.value = '';
+  const 日 = Number(出生日選單.value);
+  document.getElementById('date').value = 年 && 月 && 日 ? 年 + '-' + String(月).padStart(2,'0') + '-' + String(日).padStart(2,'0') : '';
+}
+出生年選單.addEventListener('change', 更新出生日期);
+出生月選單.addEventListener('change', 更新出生日期);
+出生日選單.addEventListener('change', 更新出生日期);
+更新出生日期();
 const 表單 = document.getElementById('birth-form');
 表單.addEventListener('submit', function (事件) {
   事件.preventDefault();
